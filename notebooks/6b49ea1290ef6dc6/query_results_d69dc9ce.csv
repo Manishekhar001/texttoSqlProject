@@ -1,0 +1,23 @@
+name,email,segment,created_at
+Customer 1,customer1@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 2,customer2@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 3,customer3@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 5,customer5@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 10,customer10@example.com,Enterprise,2026-05-06 13:42:27.678801
+Customer 13,customer13@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 21,customer21@example.com,Enterprise,2026-05-06 13:42:27.678801
+Customer 27,customer27@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 29,customer29@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 43,customer43@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 44,customer44@example.com,Enterprise,2026-05-06 13:42:27.678801
+Customer 47,customer47@example.com,Enterprise,2026-05-06 13:42:27.678801
+Customer 49,customer49@example.com,Enterprise,2026-05-06 13:42:27.678801
+Customer 54,customer54@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 59,customer59@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 62,customer62@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 67,customer67@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 69,customer69@example.com,SMB,2026-05-06 13:42:27.678801
+Customer 74,customer74@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 75,customer75@example.com,Enterprise,2026-05-06 13:42:27.678801
+Customer 80,customer80@example.com,Individual,2026-05-06 13:42:27.678801
+Customer 92,customer92@example.com,SMB,2026-05-06 13:42:27.678801
