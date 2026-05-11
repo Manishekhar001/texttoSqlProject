@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     VANNA_PINECONE_INDEX: str = "vanna-sql-training"
     VANNA_NAMESPACE: str = "sql-agent"
 
+    # SQL LLM Configuration for Determinism
+    VANNA_TEMPERATURE: float = 0.0  # 0.0 = fully deterministic, 1.0 = creative (range: 0.0-2.0)
+    VANNA_TOP_P: float = 0.1  # Nucleus sampling threshold (range: 0.0-1.0)
+    VANNA_SEED: int = 42  # Random seed for reproducibility
+    VANNA_MAX_TOKENS: int = 2000  # Maximum tokens for SQL generation
+
     # Text chunking Configuration
     CHUNK_SIZE: int = 512
     MIN_CHUNK_SIZE: int = 256
