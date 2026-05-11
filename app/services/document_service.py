@@ -279,7 +279,7 @@ def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chu
     # Fast path for simple text files - bypass Docling to avoid Lambda timeout
     # This is critical for Lambda performance (Docling causes 30+ second timeout)
     file_extension = Path(file_path).suffix.lower()
-    if file_extension in ['.txt'.'.md','.csv','.log','.json']:
+    if file_extension in ['.txt','.md','.csv','.log','.json']:
         logger.info(f"Using fast semantic chunking for {file_extension} file (bypassing Docling)")
         text = parse_document(file_path)  # Uses fast path internally
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
