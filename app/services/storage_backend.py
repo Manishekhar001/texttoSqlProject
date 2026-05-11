@@ -43,7 +43,7 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def save_document(self, document_id : str, file_path : Path, file_extensions : str) -> None:
+    def save_document(self, document_id : str, file_path : Path, file_extension : str) -> None:
         """
         Save original document file to storage.
 
