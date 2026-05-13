@@ -125,7 +125,7 @@ class LocalStorageBackend(StorageBackend):
 
         logger.debug(f'Saved {len(chunks)} chunks to {chunks_file}')  
 
-    def save_embeddings(self, document_id: str, file_extensions: str, embeddings: np.ndarray) -> None:
+    def save_embeddings(self, document_id: str, file_extension: str, embeddings: np.ndarray) -> None:
         """
         Save embeddings.npy to local storage.
 
@@ -163,7 +163,7 @@ class LocalStorageBackend(StorageBackend):
         logger.debug(f"Saved metadata to {metadata_file}")
 
 
-    def load_chunks(self, document_id : str, file_extensions : str) -> List[Dict]:
+    def load_chunks(self, document_id : str, file_extension : str) -> List[Dict]:
         """
         Load chunks.json from local storage.
 
@@ -189,7 +189,7 @@ class LocalStorageBackend(StorageBackend):
         logger.debug(f"Loaded {len(chunks)} chunks from {chunks_file}")
         return chunks
     
-    def load_embeddings(self, document_id : str, file_extensions : str) -> np.ndarray:
+    def load_embeddings(self, document_id : str, file_extension : str) -> np.ndarray:
         """
         Load embeddings.npy from local storage.
 
@@ -213,7 +213,7 @@ class LocalStorageBackend(StorageBackend):
         logger.debug(f"Loaded embeddings {embeddings.shape} from {embeddings_file}")
         return embeddings
     
-    def load_metadata(self, document_id : str, file_extensions : str) -> Dict:
+    def load_metadata(self, document_id : str, file_extension : str) -> Dict:
         """
         Load metadata.json from local storage.
 

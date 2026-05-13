@@ -58,7 +58,7 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def save_chunks(self, document_id : str, file_extensions : str, chunks : List[Dict]) -> None:
+    def save_chunks(self, document_id : str, file_extension : str, chunks : List[Dict]) -> None:
             """
             Save chunks.json to storage.
 
@@ -73,7 +73,7 @@ class StorageBackend(ABC):
             pass            
     
     @abstractmethod
-    def save_embeddings(self, document_id : str, file_extensions : str, embeddings : np.ndarray) -> None:
+    def save_embeddings(self, document_id : str, file_extension : str, embeddings : np.ndarray) -> None:
         """
         Save embeddings.npy to storage.
 
@@ -104,7 +104,7 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def load_chunks(self, document_id : str, file_extensions : str) -> List[Dict]:
+    def load_chunks(self, document_id : str, file_extension : str) -> List[Dict]:
         """
         Load chunks.json from storage.
 
@@ -121,7 +121,7 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def load_embeddings(self, document_id: str, file_extensions: str) -> np.ndarray:
+    def load_embeddings(self, document_id: str, file_extension: str) -> np.ndarray:
         """
         Load embeddings.npy from storage.
 
@@ -138,7 +138,7 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def load_metadata(self, document_id: str, file_extensions: str) -> Dict:
+    def load_metadata(self, document_id: str, file_extension: str) -> Dict:
         """
         Load metadata.json from storage.
 
