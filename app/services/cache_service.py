@@ -39,7 +39,7 @@ class CacheService:
                            based on STORAGE_BACKEND environment variable.
         """
 
-        if storage_backend == None:
+        if storage_backend is None:
             # Auto-select backend from config
             backend_type = getattr(settings,'STORAGE_BACKEND','local').lower()
 

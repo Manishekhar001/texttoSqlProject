@@ -67,7 +67,7 @@ def parse_document(file_path: str) -> str:
         logger.info(f"Using unstructured library for {file_extension} file")
         elements = partition(
             filename=file_path,
-            strategy="fast",  # Fast mode: not OCR , works eithout tesseract
+            strategy="fast",  # Fast mode: no OCR, works without tesseract
         )
 
         # Combine all elements into a single text string
@@ -82,7 +82,7 @@ def chunk_text(
     text: str,
     chunk_size: int = 512,
     overlap: int = 50,
-    encoding_name: str = "cl1ook_base",  # Gpt 4 encoding
+    encoding_name: str = "cl100k_base",  # GPT-4 encoding
 ) -> List[Dict[str, Any]]:
     """
     Split text into overlapping chunks based on token count.
@@ -193,11 +193,11 @@ def chunk_text_semantic(
 
             chunk_data = {
                 "text" : chunk_sen,
-                "chunk_idx" : idx,
-                "token_count" : len(chunk_sen) / 4,
+                "chunk_index" : idx,
+                "token_count" : len(tokenizer.encode(chunk_sen)),
                 "start_char" : char_position,
                 "end_char" : char_position + len(chunk_sen),
-                # Add empty metadata for compatibility with Dockling format
+                # Add empty metadata for compatibility with Docling format
                 'headings': [],
                 'page_numbers': [],
                 'doc_items': [],
@@ -207,10 +207,10 @@ def chunk_text_semantic(
             chunks.append(chunk_data)
             char_position += len(chunk_sen)
 
-        logger.info(f"Semantic Chunking complete: {len(chunks)} chunk (semchunk)")
+        logger.info(f"Semantic Chunking complete: {len(chunks)} chunks (semchunk)")
         return chunks
 
-    except (ImportError, Exception) as e:
+    except Exception as e:
         if isinstance(e, ImportError):
             logger.warning("semchunk not available, falling back to token-based chunking")
         else:
@@ -287,8 +287,8 @@ def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chu
         return chunks
 
     # Check if Docling should be used (config flag)
-    if not settings.USE_DOCKLING:
-        logger.info(f"Docling disabled via config (USE_DOCKLING=false), using Unstructured + semchunk fallback")
+    if not settings.USE_DOCLING:
+        logger.info(f"Docling disabled via config (USE_DOCLING=false), using Unstructured + semchunk fallback")
         text = parse_document(file_path)
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
         logger.info(f"Semantic chunking complete: {len(chunks)} chunks")

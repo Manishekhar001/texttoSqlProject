@@ -25,7 +25,7 @@ class EmbeddingService:
 
         self.api_key = api_key or settings.OPENAI_API_KEY
         if not self.api_key:
-            raise ValueError(f"OpenAI API jey is required. Set OPENA_API_KEY in .env file.")
+            raise ValueError(f"OpenAI API key is required. Set OPENAI_API_KEY in .env file.")
         
         self.client = AsyncOpenAI(
             api_key=self.api_key
@@ -64,7 +64,7 @@ class EmbeddingService:
         if self.query_cache_service and self.query_cache_service.enabled:
             embeddings = []
             texts_to_generate = []
-            text_indices = [] # Track original indices for uncaches texts
+            text_indices = [] # Track original indices for uncached texts
             cache_hits = 0
             cache_misses = 0
 
@@ -76,7 +76,7 @@ class EmbeddingService:
                 )
 
                 if cached and "embedding" in cached:
-                    embeddings.append(cached['embeddings'])
+                    embeddings.append(cached['embedding'])
                     cache_hits += 1
                 else:
                     embeddings.append(None)
@@ -99,8 +99,8 @@ class EmbeddingService:
                     for idx, embedding in zip(text_indices,new_embeddings):
                         embeddings[idx] = embedding
 
-                        # Cache inidividual embedding
-                        cache_key = self.query_cache_service.get_embeddings_key(
+                        # Cache individual embedding
+                        cache_key = self.query_cache_service.get_embedding_key(
                             texts[idx]
                         )
 
@@ -119,7 +119,7 @@ class EmbeddingService:
                         )
                     
                     # Log cache statistics
-                    logger.debug(f"Embeddings cache: {cache_hits} hits,{cache_misses} misses"
+                    logger.debug(f"Embeddings cache: {cache_hits} hits, {cache_misses} misses "
                                  f"({cache_hits/(cache_hits+cache_misses) * 100:.1f}% hit rate)")
                     
                     # Build usage info

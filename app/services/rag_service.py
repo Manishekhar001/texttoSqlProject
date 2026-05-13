@@ -26,7 +26,7 @@ class RAGService:
 
         self.api_key = api_key or settings.OPENAI_API_KEY
         if not self.api_key:
-            raise ValueError("OpenAI API Key is required. Set OPENAI_API_Key in .env file.")
+            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY in .env file.")
         
         self.embedding_service = EmbeddingService(api_key=self.api_key,
                                                   query_cache_service=query_cache_service)
@@ -72,7 +72,7 @@ class RAGService:
                 - cost_saved: Estimated cost saved if cache hit (NEW)
         """
         try :
-            # Checked cache first (if cache service is available)
+            # Check cache first (if cache service is available)
             if self.query_cache_service and self.query_cache_service.enabled:
                 cache_key = self.query_cache_service.get_rag_key(question,top_k)
                 cached_result = self.query_cache_service.get(
@@ -85,26 +85,26 @@ class RAGService:
                     return {
                         **cached_result,
                         "cache_hit" : True,
-                        "cost_saved" : "0.05$" # Approximate rating
+                        "cost_saved" : "$0.05" # Approximate saving
                     }  
                 
-                embedding , embedding_usage = await self.embedding_service.generate_embeddings(
-                    [question]
-                )
+            embedding , embedding_usage = await self.embedding_service.generate_embeddings(
+                [question]
+            )
 
-                query_embedding = embedding[0]
+            query_embedding = embedding[0]
 
 
-                search_results = await self.vector_service.search(
-                    query_embedding=query_embedding,
-                    top_k = top_k,
-                    namespace=namespace
-                )
+            search_results = await self.vector_service.search(
+                query_embedding=query_embedding,
+                top_k = top_k,
+                namespace=namespace
+            )
 
-                chunks = search_results['chunks']
+            chunks = search_results['chunks']
 
-                if not chunks:
-                    return {
+            if not chunks:
+                return {
                     "question": question,
                     "answer": "I don't have enough information to answer that question. Please upload relevant documents first.",
                     "sources": [],
@@ -113,35 +113,35 @@ class RAGService:
                     "usage": None  # No LLM call made
                 }
 
-                context = self._build_context(chunks)
+            context = self._build_context(chunks)
 
-                prompt = self._create_prompt(question,context)
+            prompt = self._create_prompt(question,context)
 
-                response = await self.llm_client.chat.completions.create(
-                    model = self.model,
-                    messages=[
-                        {
-                        "role": "system",
-                        "content": "You are a helpful assistant that answers questions based on provided context. "
-                                   "If the context doesn't contain enough information to answer the question, "
-                                   "say so explicitly. Always base your answers on the provided context."
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    temperature=self.temperature,
-                    max_tokens=self.max_tokens
-                )
+            response = await self.llm_client.chat.completions.create(
+                model = self.model,
+                messages=[
+                    {
+                    "role": "system",
+                    "content": "You are a helpful assistant that answers questions based on provided context. "
+                               "If the context doesn't contain enough information to answer the question, "
+                               "say so explicitly. Always base your answers on the provided context."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=self.temperature,
+                max_tokens=self.max_tokens
+            )
 
-                answer = response.choices[0].message.context
+            answer = response.choices[0].message.content
 
-                llm_usage = {
-                    "prompt_tokens" : response.usage.prompt_tokens,
-                    'completion_tokens' : response.usage.completion_tokens,
-                    'total_tokens' : response.usage.total_tokens
-                } if hasattr(response,'usage') and response.usage else None
+            llm_usage = {
+                "prompt_tokens" : response.usage.prompt_tokens,
+                'completion_tokens' : response.usage.completion_tokens,
+                'total_tokens' : response.usage.total_tokens
+            } if hasattr(response,'usage') and response.usage else None
 
             # Combine embedding + LLM usage
             # Use .get() to handle cases where keys might be missing (e.g., 100% cache hit)
@@ -149,7 +149,7 @@ class RAGService:
             combined_usage = {
                 "embedding_tokens" : embedding_usage.get('total_tokens',0) if embedding_usage else None,
                 "llm_prompt_tokens" : llm_usage.get("prompt_tokens",0) if llm_usage else 0,
-                "llm_completion_usage" : llm_usage.get("completion_tokens",0) if llm_usage else 0,
+                "llm_completion_tokens" : llm_usage.get("completion_tokens",0) if llm_usage else 0,
                 "total_tokens" : (
                     (embedding_usage.get("total_tokens",0) if embedding_usage else 0)+
                     (llm_usage.get("total_tokens") if llm_usage else 0)
@@ -165,7 +165,7 @@ class RAGService:
             }
 
             if include_sources:
-                result['sources'] = self._format_scores(chunks)
+                result['sources'] = self._format_sources(chunks)
 
             # Cache the result (if  cache service is available)
             if self.query_cache_service and self.query_cache_service.enabled:
@@ -184,8 +184,8 @@ class RAGService:
 
             return {
                 **result,
-                "Cache_hit" : False,
-                "cost_saved" : "0.00$"
+                "cache_hit" : False,
+                "cost_saved" : "$0.00"
             }
         
         except Exception as e:
@@ -207,8 +207,8 @@ class RAGService:
 
         for i , chunk in enumerate(chunks,1):
             filename = chunk["metadata"].get("filename","unknown")
-            text = chunk['metadata'].get('text',"")
-            score = chunk['metadata'].get('score','')
+            text = chunk.get('text',"")
+            score = chunk.get('score', 0.0)
 
             headings_json = chunk['metadata'].get('headings',[])
             try:

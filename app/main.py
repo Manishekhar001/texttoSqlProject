@@ -6,7 +6,7 @@ FastAPI application with document RAG and natural language to SQL capabilities.
 from typing import Optional
 from fastapi import FastAPI, status, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 import shutil
@@ -89,7 +89,7 @@ async def health_check():
     return {
         "status": health_status,
         "service": "Multi-Source RAG + Text-to-SQL API",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "0.1.0",
         "services": services_status,
         "features_available": {
@@ -285,7 +285,7 @@ async def upload_document(file: UploadFile = File(...)):
                     metadata = {
                         "document_id": doc_id,
                         "original_filename": file.filename,
-                        "upload_timestamp": datetime.utcnow().isoformat() + "Z",
+                        "upload_timestamp": datetime.now(timezone.utc).isoformat(),
                         "file_size_bytes": file_path.stat().st_size,
                         "chunk_count": len(chunks),
                         "embedding_model": "text-embedding-3-small",
@@ -594,7 +594,7 @@ async def get_stats():
             },
             "query_cache": cache_stats,  # NEW: Query cache statistics
             "system": {
-                "uptime_checked_at": datetime.utcnow().isoformat(),
+                "uptime_checked_at": datetime.now(timezone.utc).isoformat(),
                 "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             },
             "configuration": {
@@ -896,6 +896,7 @@ async def clear_vectors(
         raise HTTPException(
             status_code=503,
             detail=ErrorResponse.service_unavailable(
+                "Vector service",
                 "Vector database not initialized. Check PINECONE_API_KEY configuration."
             )
         )
@@ -1376,10 +1377,10 @@ def initialize_services():
 # Event handlers for startup/shutdown
 # NOTE: Startup event disabled for Lambda (initialization handled in lambda_handler.py)
 # Uncomment for local development with uvicorn
-# @app.on_event("startup")
-# async def startup_event():
-#     """Execute tasks on application startup."""
-#     initialize_services()
+@app.on_event("startup")
+async def startup_event():
+    """Execute tasks on application startup."""
+    initialize_services()
 
 
 @app.on_event("shutdown")

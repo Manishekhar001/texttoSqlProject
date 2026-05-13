@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
-logger = logging.getLogger("rag_app.docling_service.py")
+logger = logging.getLogger("rag_app.docling_service")
 
 try:
     from docling.chunking import HybridChunker
@@ -180,7 +180,7 @@ def chunk_with_hybrid(doc, max_tokens: int = 512, min_tokens: int = 256) -> List
     """
 
     if not DOCLING_AVAILABLE:
-        raise ImportError(f"Docling is not installed. Run:Pip install docling docling-core")
+        raise ImportError("Docling is not installed. Run: pip install docling docling-core")
     
     try:
         import tiktoken
@@ -207,19 +207,19 @@ def chunk_with_hybrid(doc, max_tokens: int = 512, min_tokens: int = 256) -> List
         current_merged = None
 
         for chunk in raw_chunks:
-            token_count = len(tiktoken_encoder.encode(chunk))
+            token_count = len(tiktoken_encoder.encode(chunk.text))
 
             if current_merged is None:
                 current_merged = chunk
             else:
-                current_tokens = len(tiktoken_encoder.encode(current_merged))
+                current_tokens = len(tiktoken_encoder.encode(current_merged.text))
                 combined_tokens = current_tokens + token_count
 
                 # Merge if current chunk is undersized and combined won't exceed max
 
                 if current_tokens < min_tokens and combined_tokens <= max_tokens:
                     # Merge chunks
-                    current_merged.text = current_merged + "\n\n" + chunk.text
+                    current_merged.text = current_merged.text + "\n\n" + chunk.text
 
                     # Merged metadata
                     if chunk.meta and chunk.meta.headings :
@@ -363,7 +363,7 @@ def fallback_to_unstructured(file_path : str, chunk_size : int = 512) -> List[Di
         List of chunk dictionaries (without rich metadata)
     """
 
-    logger.warning(f"Using unstructured.io falling for {Path(file_path).name}")
+    logger.warning(f"Using unstructured.io fallback for {Path(file_path).name}")
 
     try:
         from app.services.document_service import parse_document, chunk_text

@@ -4,9 +4,7 @@ Determines whether a query should be routed to SQL, Documents, or both (HYBRID).
 Uses keyword-based classification for intelligent routing.
 """
 
-from ast import keyword
 from typing import Literal
-from winreg import QueryInfoKey
 
 QueryType = Literal["SQL", "DOCUMENTS", "HYBRID"]
 

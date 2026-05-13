@@ -25,6 +25,7 @@ class FileValidator:
         ".csv": "text/csv",
         ".json": "application/json",
         ".txt": "text/plain",
+        ".html": "text/html",
     }
 
     # Maximum file size (50 MB)
@@ -183,7 +184,7 @@ class QueryValidator:
 
         # Remove SQL comments
         sql = re.sub(r"--.*$", "", sql, flags=re.MULTILINE)
-        sql = re.sub(r"/\*.?\*/", "", sql, flags=re.DOTALL)
+        sql = re.sub(r"/\*.*?\*/", "", sql, flags=re.DOTALL)
 
         # Normalize whitespace
         sql = " ".join(sql.split())
@@ -245,9 +246,8 @@ def format_file_size(size_bytes: int) -> str:
     for unit in ["B", "KB", "MB", "GB"]:
         if size_bytes < 1024.0:
             return f"{size_bytes:.1f} {unit}"
-        size = float(size_bytes)
-        size = size / 1024.0
-    return f"{size:.1f} TB"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} TB"
 
 
 def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:

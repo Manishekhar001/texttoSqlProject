@@ -53,7 +53,7 @@ class S3StorageBackend(StorageBackend):
             PermissionError if access denied to bucket
         """     
 
-        self.bucket_name = self.bucker_name or settings.S3_CACHE_BUCKET
+        self.bucket_name = bucket_name or settings.S3_CACHE_BUCKET
         self.region = settings.AWS_REGION
 
         # Configure boto3 with retry logic (exponential backoff)
@@ -61,7 +61,7 @@ class S3StorageBackend(StorageBackend):
             region_name= self.region,
             retries = {
                 'max_attempts' : 3,
-                'mode' : 'adaptive' # Handles throttling autmatically
+                'mode' : 'adaptive' # Handles throttling automatically
             }
         )
 
@@ -128,7 +128,7 @@ class S3StorageBackend(StorageBackend):
         """   
 
         try:
-            self.s3_client.head_object(Bucket = self.bucket_name, key = key)
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=key)
             return True
         except ClientError as e:
             if e.response['Error']['Code'] == '404':
@@ -253,7 +253,7 @@ class S3StorageBackend(StorageBackend):
                 Key = key,
                 Body = buffer.getvalue(),
                 ContentType = 'application/octet-stream',
-                ServerSideEncrption = 'AES256'
+                ServerSideEncryption = 'AES256'
             )
             logger.debug(f"Saved embeddings {embeddings.shape} to S3: {key}")
         except Exception as e:
@@ -400,7 +400,7 @@ class S3StorageBackend(StorageBackend):
         ]      
 
         try:
-            self.s3_client.delete_object(
+            self.s3_client.delete_objects(
                 Bucket = self.bucket_name,
                 Delete = {"Objects" : keys_to_delete}
             )

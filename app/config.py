@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     PINECONE_ENVIRONMENT: str = "us-east-1-aws"
     PINECONE_INDEX: str = "rag-cache-docsqa"
 
-    # Supabase/PosytgreSql Configuration
+    # Supabase/PostgreSQL Configuration
     DATABASE_URL: Optional[str] = None
 
     # Opik monitoring
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     OPIK_PROJECT_NAME: str = "RAG-Text2Sql"
 
     # Vanna 2.0 Configuration (Text2Sql)
-    VANNA_MODEL: str = "get-4o"
+    VANNA_MODEL: str = "gpt-4o"
     VANNA_PINECONE_INDEX: str = "vanna-sql-training"
     VANNA_NAMESPACE: str = "sql-agent"
 
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     # UPLOAD_DIR: str = "data/uploads"
     # CACHE_DIR: str = "data/cached_chunks"
 
-    # Storage paths (auto-detects lambda environement)
+    # Storage paths (auto-detects Lambda environment)
     @property
     def UPLOAD_DIR(self) -> str:
         # Use /tmp in Lambda/production, data/ locally
@@ -77,6 +77,8 @@ class Settings(BaseSettings):
     AWS_REGION: str = "us-east-1"
     # AWS credentials from environment or IAM role (recommended for Lambda)
     # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are read automatically by boto3
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
 
     # Upstash Redis Configuration (Query-level caching)
     UPSTASH_REDIS_URL: Optional[str] = None  # Optional - app works without caching

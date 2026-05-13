@@ -1,6 +1,6 @@
 """
-RAG (Retrieval-Augmented Generation) Service
-Combines vector search with LLM generation to answer questions from documents.
+Vector Service
+Handles vector storage and similarity search operations using Pinecone.
 """
 
 from typing import List, Dict, Any, Optional
@@ -43,7 +43,7 @@ class VectorService:
             existing_indexes = self.pc.list_indexes()
             index_names = [idx['name'] for idx in existing_indexes]
 
-            if self.index_names not in index_names:
+            if self.index_name not in index_names:
                 # Create index if it doesn't exist
                 logger.info(f'Creating Pinecone index : {self.index_name}')
                 self.pc.create_index(

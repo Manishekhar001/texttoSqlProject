@@ -9,7 +9,7 @@ import asyncio
 import pandas as pd
 import logging
 
-logger = logging.getLogger("rag_app.sql_sevice")
+logger = logging.getLogger("rag_app.sql_service")
 
 from vanna import Agent
 from vanna.integrations.openai import OpenAILlmService
@@ -283,7 +283,7 @@ class VannaAgentWrapper:
             raise ValueError(f"Failed to execute SQL: {str(e)}")
 
 
-class TexttoSQLService:
+class TextToSQLService:
     """
     Service for converting natural language to SQL using Vanna.ai 2.0 Agent Framework.
     Maintains compatibility with existing FastAPI endpoints.
@@ -313,8 +313,8 @@ class TexttoSQLService:
         
         pinecone_key = settings.PINECONE_API_KEY if PINECONE_AVAILABLE else None
         self.vanna = VannaAgentWrapper(
-            openai_api_key=openai_api_key,
-            database_url=database_url,
+            openai_api_key=self.openai_api_key,
+            database_url=self.database_url,
             pinecone_api_key=pinecone_key
         )
 
@@ -477,7 +477,7 @@ class TexttoSQLService:
                     'query_id' : query_id,
                     "question" : question,
                     'sql' : cached_result['sql'],
-                    'explanation' : cached_result.get('explanation','This sql will retrieve data from your database. Please review befoew approving.'),
+                    'explanation' : cached_result.get('explanation','This SQL will retrieve data from your database. Please review before approving.'),
                     'status' : 'pending_approval',
                     'generated_at' : pd.Timestamp.now().isoformat(),
                     "cache_hit" : True,

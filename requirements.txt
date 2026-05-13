@@ -17,7 +17,7 @@ pillow  # Image processing for document parsing
 #pdfminer.six==20231228
 # Embeddings & Vector DB
 openai
-pinecone[grpc]
+pinecone
 tiktoken
 
 # Text-to-SQL

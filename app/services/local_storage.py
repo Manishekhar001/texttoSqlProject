@@ -158,7 +158,7 @@ class LocalStorageBackend(StorageBackend):
 
         metadata_file = doc_path / "metadata.json"
         with open(metadata_file,'w') as f:
-            json.dumps(metadata,f,indent=2)
+            json.dump(metadata, f, indent=2)
 
         logger.debug(f"Saved metadata to {metadata_file}")
 
@@ -207,7 +207,7 @@ class LocalStorageBackend(StorageBackend):
         embeddings_file = self._get_document_path(document_id=document_id) / 'embeddings.npy'
 
         if not embeddings_file.exists():
-            return FileNotFoundError(f"Embeddings file not found : {embeddings_file}")
+            raise FileNotFoundError(f"Embeddings file not found : {embeddings_file}")
 
         embeddings = np.load(embeddings_file)
         logger.debug(f"Loaded embeddings {embeddings.shape} from {embeddings_file}")
