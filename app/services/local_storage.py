@@ -55,7 +55,7 @@ class LocalStorageBackend(StorageBackend):
 
         return self.cache_dir / document_id
 
-    def exists(self, document_id: str, file_extensions : str) -> bool:
+    def exists(self, document_id: str, file_extension : str) -> bool:
         """
         Check if all cache files exist for this document.
 
