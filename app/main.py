@@ -29,6 +29,15 @@ from app.utils import (
 # Initialize logging
 logger = setup_logging(log_level="INFO")
 
+# Inject OPIK settings into os.environ so the SDK picks them up on import
+if settings.OPIK_API_KEY:
+    import os
+    os.environ["OPIK_API_KEY"] = settings.OPIK_API_KEY
+    if getattr(settings, "OPIK_WORKSPACE", None):
+        os.environ["OPIK_WORKSPACE"] = settings.OPIK_WORKSPACE
+    if getattr(settings, "OPIK_PROJECT_NAME", None):
+        os.environ["OPIK_PROJECT_NAME"] = settings.OPIK_PROJECT_NAME
+
 # OPIK monitoring (optional - gracefully handles if not configured)
 try:
     from opik import track
@@ -1291,7 +1300,12 @@ def initialize_services():
 
                     # Configure OPIK with API key
                     from opik import configure
-                    configure(api_key=settings.OPIK_API_KEY)
+                    configure(
+                        api_key=settings.OPIK_API_KEY,
+                        workspace=settings.OPIK_WORKSPACE,
+                        project_name=settings.OPIK_PROJECT_NAME,
+                        force=True,
+                    )
 
                     logger.info("✓ OPIK monitoring initialized!")
                 finally:

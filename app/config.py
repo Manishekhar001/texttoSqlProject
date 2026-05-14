@@ -31,6 +31,7 @@ class Settings(BaseSettings):
 
     # Opik monitoring
     OPIK_API_KEY: Optional[str] = None
+    OPIK_WORKSPACE: Optional[str] = None
     OPIK_PROJECT_NAME: str = "RAG-Text2Sql"
 
     # Vanna 2.0 Configuration (Text2Sql)
