@@ -25,13 +25,13 @@ jobs:
           pip install pytest ruff black
 
       - name: Lint with ruff
-        run: ruff check app/ || echo "Linting issues found"
+        run: ruff check app/
 
       - name: Format check with black
-        run: black --check app/ || echo "Formatting issues found"
+        run: black --check app/
 
-      - name: Run tests (if available)
-        run: pytest tests/ -v || echo "No tests found or tests not configured"
+      - name: Run tests
+        run: pytest tests/ -v
 
   build-test:
     runs-on: ubuntu-latest
