@@ -3,9 +3,9 @@ Utility functions for validation, error handling, and common operations.
 """
 
 import re
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 
 
 class ValidationError(Exception):

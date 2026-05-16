@@ -5,11 +5,8 @@ Handles Text-to-SQL conversion using Vanna.ai 2.0 with OpenAI and PostgreSQL.
 
 from typing import List, Dict, Any, Optional
 import uuid
-import asyncio
 import pandas as pd
 import logging
-
-logger = logging.getLogger("rag_app.sql_service")
 
 from vanna import Agent
 from vanna.integrations.openai import OpenAILlmService
@@ -28,6 +25,8 @@ except ImportError:
 
 
 from app.config import settings
+
+logger = logging.getLogger("rag_app.sql_service")
 
 class SimpleUserResolver(UserResolver):
     """Simple user resolver for SQL service - grants full access."""
@@ -230,7 +229,7 @@ class VannaAgentWrapper:
             import psycopg2
             import psycopg2.extras
             import socket
-            from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+            from urllib.parse import urlparse
 
             # Parse connection string and force IPv4 for Lambda compatibility
             # AWS Lambda doesn't support IPv6 outbound connections

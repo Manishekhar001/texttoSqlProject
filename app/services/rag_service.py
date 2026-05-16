@@ -3,7 +3,7 @@ RAG (Retrieval-Augmented Generation) Service
 Combines vector search with LLM generation to answer questions from documents.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from openai import AsyncOpenAI
 import logging
 from app.config import settings

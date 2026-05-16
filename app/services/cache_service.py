@@ -6,7 +6,6 @@ Now supports pluggable storage backends (local filesystem or S3).
 """
 
 import hashlib
-import json
 import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -171,7 +170,7 @@ class CacheService:
             # Attempt cleanup on failure (delete partial cache)
             try:
                 self.storage.delete(doc_id, file_extension)
-            except:
+            except Exception:
                 pass
             raise Exception(f"Failed to save cache: {str(e)}")  
 
@@ -292,7 +291,6 @@ class CacheService:
                     # LocalStorage: delete each document individually
                     # This is slower but local storage has fast I/O
                     document_ids = self.storage.list_documents()
-                    cleared_count = 0
 
                     for doc_id in document_ids:
                         # Problem: We don't know file_extension for each doc_id

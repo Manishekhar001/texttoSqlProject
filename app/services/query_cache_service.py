@@ -13,8 +13,7 @@ Separate from document cache (S3/local) which handles large file storage.
 import json
 import hashlib
 import logging
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 

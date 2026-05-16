@@ -3,7 +3,7 @@ Vector Service
 Handles vector storage and similarity search operations using Pinecone.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import logging
 from pinecone.grpc import PineconeGRPC
 from pinecone import ServerlessSpec

@@ -394,9 +394,9 @@ class S3StorageBackend(StorageBackend):
 
         keys_to_delete = [
             {'Key' : self._get_s3_key(document_id,file_extension,f"document.{file_extension}")},
-            {'Key' : self._get_s3_key(document_id,file_extension,f"chunks.json")},
-            {'Key' : self._get_s3_key(document_id,file_extension,f"embeddings.npy")},
-            {'Key' : self._get_s3_key(document_id,file_extension,f"metadata.json")}
+            {'Key' : self._get_s3_key(document_id,file_extension,"chunks.json")},
+            {'Key' : self._get_s3_key(document_id,file_extension,"embeddings.npy")},
+            {'Key' : self._get_s3_key(document_id,file_extension,"metadata.json")}
         ]      
 
         try:

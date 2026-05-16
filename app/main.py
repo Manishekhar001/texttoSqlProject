@@ -5,15 +5,13 @@ FastAPI application with document RAG and natural language to SQL capabilities.
 
 from typing import Optional
 from fastapi import FastAPI, status, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
 import shutil
 
 from app.config import settings
-from app.logging_config import setup_logging, get_logger
-from app.services.document_service import parse_document, chunk_text
+from app.logging_config import setup_logging
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_service import VectorService
 from app.services.rag_service import RAGService
@@ -23,7 +21,7 @@ from app.services.cache_service import CacheService
 from app.services.query_cache_service import QueryCacheService
 from app.utils import (
     FileValidator, QueryValidator, ValidationError,
-    ErrorResponse, format_file_size, truncate_text
+    ErrorResponse, format_file_size
 )
 
 # Initialize logging
@@ -1313,7 +1311,7 @@ def initialize_services():
                     sys.stdin = old_stdin
                     try:
                         devnull.close()
-                    except:
+                    except Exception:
                         pass
             else:
                 logger.warning("OPIK available but API key not configured.")

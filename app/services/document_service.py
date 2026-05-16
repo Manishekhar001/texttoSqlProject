@@ -288,7 +288,7 @@ def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chu
 
     # Check if Docling should be used (config flag)
     if not settings.USE_DOCLING:
-        logger.info(f"Docling disabled via config (USE_DOCLING=false), using Unstructured + semchunk fallback")
+        logger.info("Docling disabled via config (USE_DOCLING=false), using Unstructured + semchunk fallback")
         text = parse_document(file_path)
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
         logger.info(f"Semantic chunking complete: {len(chunks)} chunks")

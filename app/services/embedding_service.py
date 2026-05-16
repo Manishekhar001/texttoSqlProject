@@ -25,7 +25,7 @@ class EmbeddingService:
 
         self.api_key = api_key or settings.OPENAI_API_KEY
         if not self.api_key:
-            raise ValueError(f"OpenAI API key is required. Set OPENAI_API_KEY in .env file.")
+            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY in .env file.")
         
         self.client = AsyncOpenAI(
             api_key=self.api_key
