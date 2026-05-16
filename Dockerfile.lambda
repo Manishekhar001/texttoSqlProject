@@ -21,7 +21,8 @@ FROM public.ecr.aws/lambda/python:3.12 AS builder
 # - UV_LINK_MODE=copy: Cache mount compatibility
 ENV UV_COMPILE_BYTECODE=1 \
     UV_NO_INSTALLER_METADATA=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    UV_HTTP_TIMEOUT=300
 
 # Install system dependencies
 # Note: tesseract removed for Lambda - OCR can be added via Lambda layers
