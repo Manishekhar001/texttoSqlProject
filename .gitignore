@@ -89,9 +89,9 @@ evaluation_results.json
 .claude/
 
 # Docker files (don't include in build context)
-Dockerfile
+# Dockerfile
 .dockerignore
-docker-compose.yml
+# docker-compose.yml
 
 # CI/CD
 # .github/
