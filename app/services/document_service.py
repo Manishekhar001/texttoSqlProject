@@ -346,7 +346,9 @@ def parse_and_chunk_with_context(
                 "falling back to Unstructured + semchunk"
             )
     elif not settings.USE_DOCLING:
-        logger.info("[Docling DISABLED] USE_DOCLING=false — using Unstructured + semchunk")
+        logger.info(
+            "[Docling DISABLED] USE_DOCLING=false — using Unstructured + semchunk"
+        )
     else:
         logger.info(
             f"[Docling SKIP] '{file_extension}' not in supported set — using Unstructured + semchunk"
