@@ -49,6 +49,16 @@ class CacheService:
                         f"Using S3 storage (bucket: {settings.S3_CACHE_BUCKET})"
                     )
                 except Exception as e:
+                    if settings.is_lambda or settings.ENVIRONMENT == "production":
+                        # In production, a misconfigured S3 bucket is a fatal error.
+                        # Silently falling back to /tmp would cache nothing durably
+                        # and mask the real problem (wrong bucket name / missing IAM policy).
+                        raise RuntimeError(
+                            f"S3 storage initialisation failed in production — "
+                            f"refusing to fall back to local /tmp storage. "
+                            f"Fix the S3_CACHE_BUCKET secret or Lambda IAM role. "
+                            f"Original error: {e}"
+                        )
                     logger.warning(
                         f"Failed to initialize S3 storage: {e}. Falling back to local."
                     )

@@ -477,9 +477,8 @@ jobs:
           echo "=========================================="
 
       - name: Test S3 Storage Backend
-        if: contains(github.event.head_commit.message, '[test-s3]') || github.event_name == 'release'
         env:
-          API_URL: ${{ secrets.API_GATEWAY_URL }}
+          API_URL: ${{ secrets.LAMBDA_FUNCTION_URL }}
         run: |
           echo ""
           echo "=========================================="
