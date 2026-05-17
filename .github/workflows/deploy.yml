@@ -197,6 +197,7 @@ jobs:
           docker build \
             --platform linux/amd64 \
             -f Dockerfile.lambda \
+            --build-arg BASE_IMAGE_REGISTRY=$ECR_REGISTRY \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:amd64 \
@@ -276,6 +277,54 @@ jobs:
           echo "✅ Lambda deployment completed!"
           echo "=========================================="
 
+      - name: Ensure Lambda execution role has S3 cache permissions
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "🔐 Attaching S3 Cache Policy to Lambda Role"
+          echo "=========================================="
+
+          # Resolve the Lambda execution role name from its ARN
+          ROLE_ARN=$(aws lambda get-function-configuration \
+            --function-name ${{ env.LAMBDA_FUNCTION }} \
+            --query 'Role' \
+            --output text)
+          ROLE_NAME=$(basename "$ROLE_ARN")
+          echo "Lambda execution role: $ROLE_NAME"
+
+          # Build the policy document using the S3_CACHE_BUCKET secret so the
+          # ARNs are always in sync with the bucket actually used at runtime.
+          POLICY_DOC=$(cat <<EOF
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Sid": "S3CacheAccess",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:HeadObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::${{ secrets.S3_CACHE_BUCKET }}",
+                "arn:aws:s3:::${{ secrets.S3_CACHE_BUCKET }}/*"
+              ]
+            }]
+          }
+          EOF
+          )
+
+          aws iam put-role-policy \
+            --role-name "$ROLE_NAME" \
+            --policy-name "S3CacheAccess" \
+            --policy-document "$POLICY_DOC"
+
+          echo "✅ S3 cache policy attached to role: $ROLE_NAME"
+          echo "   Bucket: ${{ secrets.S3_CACHE_BUCKET }}"
+          echo ""
+
       - name: Configure Lambda Environment (S3 Storage + Redis Cache)
         run: |
           echo ""
@@ -317,7 +366,7 @@ jobs:
             "TRANSFORMERS_CACHE": "/tmp/.cache/huggingface",
             "UNSTRUCTURED_CACHE_DIR": "/tmp/.cache/unstructured",
             "DOCLING_CACHE_DIR": "/tmp/.cache/docling",
-            "USE_DOCLING": "false"
+            "USE_DOCLING": "true"
           }' /tmp/current-vars.json | jq '{Variables: .}' > /tmp/env-config.json
 
           echo "📋 Environment configuration to apply:"

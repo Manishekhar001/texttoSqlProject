@@ -52,6 +52,16 @@
         "logs:FilterLogEvents"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "IAMRolePolicyManagement",
+      "Effect": "Allow",
+      "Action": [
+        "iam:PutRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:GetRole"
+      ],
+      "Resource": "arn:aws:iam::*:role/*"
     }
   ]
 }

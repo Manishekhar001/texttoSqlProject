@@ -6,6 +6,15 @@
 # Platform is specified via GitHub Actions buildx configuration
 
 # ============================================================================
+# Global build args (must be declared BEFORE first FROM to be usable in FROM)
+# BASE_IMAGE_REGISTRY is passed by deploy.yml via:
+#   --build-arg BASE_IMAGE_REGISTRY=$ECR_REGISTRY
+# This makes the account ID dynamic so any AWS account works without editing
+# this file. Never hardcode an account ID here.
+# ============================================================================
+ARG BASE_IMAGE_REGISTRY
+
+# ============================================================================
 # Stage 1: Import UV binary from official image
 # ============================================================================
 FROM ghcr.io/astral-sh/uv:0.9.26 AS uv
@@ -76,7 +85,9 @@ RUN chmod -R 755 ${LAMBDA_TASK_ROOT}/app && \
 # To rebuild base image (only when system deps change):
 #   ./build-base-image.sh
 #
-FROM 942679463925.dkr.ecr.us-east-1.amazonaws.com/lambda-python-deps:3.12
+# BASE_IMAGE_REGISTRY is injected at build time from deploy.yml.
+# Value example: 123456789012.dkr.ecr.us-east-1.amazonaws.com
+FROM ${BASE_IMAGE_REGISTRY}/lambda-python-deps:3.12
 
 # Copy everything from builder stage (permissions already fixed)
 COPY --from=builder ${LAMBDA_TASK_ROOT} ${LAMBDA_TASK_ROOT}

@@ -12,9 +12,15 @@
         "s3:HeadObject"
       ],
       "Resource": [
-        "arn:aws:s3:::rag-cache-bucket",
-        "arn:aws:s3:::rag-cache-bucket/*"
+        "arn:aws:s3:::YOUR_BUCKET_NAME",
+        "arn:aws:s3:::YOUR_BUCKET_NAME/*"
       ]
     }
   ]
 }
+
+// IMPORTANT: Replace YOUR_BUCKET_NAME with the value of your S3_CACHE_BUCKET GitHub secret.
+// This policy is attached automatically by deploy.yml (the 'Ensure Lambda execution role
+// has S3 cache permissions' step). You only need this file if attaching the policy manually.
+// The bucket name used at runtime is determined by the S3_CACHE_BUCKET secret, NOT by
+// any hardcoded name in this file or in config.py.
