@@ -62,7 +62,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Lambda Docker image (x86-64)
-        run: docker build --platform linux/amd64 -f Dockerfile.lambda -t rag-lambda:test .
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker build --platform linux/amd64 -f Dockerfile.lambda --build-arg BASE_IMAGE_REGISTRY=$ECR_REGISTRY -t rag-lambda:test .
 
       - name: Test image builds successfully
         run: echo "✅ Docker image built successfully for x86-64 (AMD64)"
