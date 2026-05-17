@@ -1406,8 +1406,10 @@ def initialize_services():
             vector_service = VectorService()
             vector_service.connect_to_index()
             rag_service = RAGService(
-                query_cache_service=query_cache_service
-            )  # Pass cache service
+                query_cache_service=query_cache_service,
+                embedding_service=embedding_service,   # reuse existing, no duplicate
+                vector_service=vector_service,          # reuse existing, no duplicate
+            )
             logger.info("✓ Document RAG services initialized!")
         else:
             logger.warning("OpenAI/Pinecone API keys not configured.")

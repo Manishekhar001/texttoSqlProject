@@ -16,13 +16,21 @@ logger = logging.getLogger(__name__)
 class RAGService:
     """Service for Retrieval-Augmented Generation."""
 
-    def __init__(self, api_key: str | None = None, query_cache_service=None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        query_cache_service=None,
+        embedding_service=None,
+        vector_service=None,
+    ):
         """
         Initialize the RAG service.
 
         Args:
             api_key: OpenAI API key (optional, uses settings if not provided)
             query_cache_service: Optional QueryCacheService for response caching
+            embedding_service: Optional existing EmbeddingService to reuse (avoids duplicate)
+            vector_service: Optional existing VectorService to reuse (avoids duplicate)
         """
 
         self.api_key = api_key or settings.OPENAI_API_KEY
@@ -31,10 +39,12 @@ class RAGService:
                 "OpenAI API key is required. Set OPENAI_API_KEY in .env file."
             )
 
-        self.embedding_service = EmbeddingService(
+        # Reuse existing services if provided — avoids duplicate connections
+        # and prevents double Pinecone connection on Lambda cold start
+        self.embedding_service = embedding_service or EmbeddingService(
             api_key=self.api_key, query_cache_service=query_cache_service
         )
-        self.vector_service = VectorService()
+        self.vector_service = vector_service or VectorService()
         self.llm_client = AsyncOpenAI(api_key=self.api_key)
         self.query_cache_service = query_cache_service
 

@@ -405,7 +405,7 @@ class TestStorageBackendCompatibility:
     def storage_backend(self, request, tmp_path):
         """Parametrized fixture to test both backends."""
         if request.param == "local":
-            return LocalStorageBackend(cache_dir=tmp_path)
+            yield LocalStorageBackend(cache_dir=tmp_path)
         elif request.param == "s3":
             from moto import mock_aws
             import boto3
