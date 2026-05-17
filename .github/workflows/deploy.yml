@@ -6,10 +6,10 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: rag-text-to-sql-server
+  ECR_REPOSITORY: rag-text-to-sql-06
   BASE_IMAGE_REPOSITORY: lambda-python-deps
   BASE_IMAGE_TAG: "3.12"
-  LAMBDA_FUNCTION: rag-text-to-sql-server
+  LAMBDA_FUNCTION: rag-text-to-sql-06
 
 jobs:
   deploy:

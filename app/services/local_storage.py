@@ -16,6 +16,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class LocalStorageBackend(StorageBackend):
     """
     Filesystem-based storage for local development.
@@ -42,7 +43,7 @@ class LocalStorageBackend(StorageBackend):
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"LocalStorage initialized with cache_dir : {self.cache_dir}")
 
-    def _get_document_path(self, document_id : str) -> Path:
+    def _get_document_path(self, document_id: str) -> Path:
         """
         Get the folder path for a document.
 
@@ -55,7 +56,7 @@ class LocalStorageBackend(StorageBackend):
 
         return self.cache_dir / document_id
 
-    def exists(self, document_id: str, file_extension : str) -> bool:
+    def exists(self, document_id: str, file_extension: str) -> bool:
         """
         Check if all cache files exist for this document.
 
@@ -72,10 +73,10 @@ class LocalStorageBackend(StorageBackend):
         doc_path = self._get_document_path(document_id)
 
         # Check for required cache files (original document is optional for backward compatibility)
-        required_files =  [
+        required_files = [
             doc_path / "chunks.json",
             doc_path / "embeddings.npy",
-            doc_path / "metadata.json"
+            doc_path / "metadata.json",
         ]
 
         exist = all(f.exists() for f in required_files)
@@ -88,7 +89,9 @@ class LocalStorageBackend(StorageBackend):
 
         return exist
 
-    def save_document(self, document_id : str, file_path : Path, file_extension : str) -> None:   
+    def save_document(
+        self, document_id: str, file_path: Path, file_extension: str
+    ) -> None:
         """
         Save original document to local storage.
 
@@ -106,7 +109,9 @@ class LocalStorageBackend(StorageBackend):
         shutil.copy2(file_path, destination)
         logger.info(f"Saved original document to {destination}")
 
-    def save_chunks(self, document_id : str, file_extension: str, chunks : List[Dict]) -> None:
+    def save_chunks(
+        self, document_id: str, file_extension: str, chunks: List[Dict]
+    ) -> None:
         """
         Save chunks.json to local storage.
 
@@ -117,15 +122,17 @@ class LocalStorageBackend(StorageBackend):
         """
 
         doc_path = self._get_document_path(document_id=document_id)
-        doc_path.mkdir(parents=True, exist_ok= True)
+        doc_path.mkdir(parents=True, exist_ok=True)
 
         chunks_file = doc_path / "chunks.json"
-        with open(chunks_file,'w') as f:
-            json.dump(chunks, f, indent = 2) 
+        with open(chunks_file, "w") as f:
+            json.dump(chunks, f, indent=2)
 
-        logger.debug(f'Saved {len(chunks)} chunks to {chunks_file}')  
+        logger.debug(f"Saved {len(chunks)} chunks to {chunks_file}")
 
-    def save_embeddings(self, document_id: str, file_extension: str, embeddings: np.ndarray) -> None:
+    def save_embeddings(
+        self, document_id: str, file_extension: str, embeddings: np.ndarray
+    ) -> None:
         """
         Save embeddings.npy to local storage.
 
@@ -135,15 +142,17 @@ class LocalStorageBackend(StorageBackend):
             embeddings: NumPy array of shape (num_chunks, 1536)
         """
 
-        doc_path = self._get_document_path(document_id=document_id)      
-        doc_path.mkdir(parents=True, exist_ok = True)  
+        doc_path = self._get_document_path(document_id=document_id)
+        doc_path.mkdir(parents=True, exist_ok=True)
 
-        embeddings_file = doc_path / 'embeddings.npy'
+        embeddings_file = doc_path / "embeddings.npy"
         np.save(embeddings_file, embeddings)
 
         logger.debug(f"Saved embeddings {embeddings.shape} to {embeddings_file}")
 
-    def save_metadata(self, document_id : str, file_extension : str, metadata : Dict) -> None:
+    def save_metadata(
+        self, document_id: str, file_extension: str, metadata: Dict
+    ) -> None:
         """
         Save metadata.json to local storage.
 
@@ -154,16 +163,15 @@ class LocalStorageBackend(StorageBackend):
         """
 
         doc_path = self._get_document_path(document_id=document_id)
-        doc_path.mkdir(parents = True, exist_ok=True)
+        doc_path.mkdir(parents=True, exist_ok=True)
 
         metadata_file = doc_path / "metadata.json"
-        with open(metadata_file,'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=2)
 
         logger.debug(f"Saved metadata to {metadata_file}")
 
-
-    def load_chunks(self, document_id : str, file_extension : str) -> List[Dict]:
+    def load_chunks(self, document_id: str, file_extension: str) -> List[Dict]:
         """
         Load chunks.json from local storage.
 
@@ -178,7 +186,7 @@ class LocalStorageBackend(StorageBackend):
             FileNotFoundError if chunks file doesn't exist
         """
 
-        chunks_file = self._get_document_path(document_id=document_id) / 'chunks.json'
+        chunks_file = self._get_document_path(document_id=document_id) / "chunks.json"
 
         if not chunks_file.exists():
             raise FileNotFoundError(f"Chunks file not found : {chunks_file}")
@@ -188,8 +196,8 @@ class LocalStorageBackend(StorageBackend):
 
         logger.debug(f"Loaded {len(chunks)} chunks from {chunks_file}")
         return chunks
-    
-    def load_embeddings(self, document_id : str, file_extension : str) -> np.ndarray:
+
+    def load_embeddings(self, document_id: str, file_extension: str) -> np.ndarray:
         """
         Load embeddings.npy from local storage.
 
@@ -204,7 +212,9 @@ class LocalStorageBackend(StorageBackend):
             FileNotFoundError if embeddings file doesn't exist
         """
 
-        embeddings_file = self._get_document_path(document_id=document_id) / 'embeddings.npy'
+        embeddings_file = (
+            self._get_document_path(document_id=document_id) / "embeddings.npy"
+        )
 
         if not embeddings_file.exists():
             raise FileNotFoundError(f"Embeddings file not found : {embeddings_file}")
@@ -212,8 +222,8 @@ class LocalStorageBackend(StorageBackend):
         embeddings = np.load(embeddings_file)
         logger.debug(f"Loaded embeddings {embeddings.shape} from {embeddings_file}")
         return embeddings
-    
-    def load_metadata(self, document_id : str, file_extension : str) -> Dict:
+
+    def load_metadata(self, document_id: str, file_extension: str) -> Dict:
         """
         Load metadata.json from local storage.
 
@@ -228,7 +238,9 @@ class LocalStorageBackend(StorageBackend):
             FileNotFoundError if metadata file doesn't exist
         """
 
-        metadata_file = self._get_document_path(document_id=document_id) / 'metadata.json'
+        metadata_file = (
+            self._get_document_path(document_id=document_id) / "metadata.json"
+        )
 
         if not metadata_file.exists():
             raise FileNotFoundError(f"Metadata file not found: {metadata_file}")
@@ -298,9 +310,8 @@ class LocalStorageBackend(StorageBackend):
             "cache_dir": str(self.cache_dir),
             "total_documents": documents_count,
             "total_files": total_files,
-            "total_size_mb": round(total_size / (1024 * 1024), 2)
+            "total_size_mb": round(total_size / (1024 * 1024), 2),
         }
 
         logger.info(f"Local storage stats: {stats}")
         return stats
-        

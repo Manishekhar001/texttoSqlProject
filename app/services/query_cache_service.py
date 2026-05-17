@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 class QueryCacheService:
     """Redis-based cache service for query results, embeddings, and SQL."""
 
-    def __init__(self, redis_url: Optional[str] = None, redis_token: Optional[str] = None):
+    def __init__(
+        self, redis_url: Optional[str] = None, redis_token: Optional[str] = None
+    ):
         """
         Initialize Upstash Redis connection.
 
@@ -115,9 +117,7 @@ class QueryCacheService:
             self._record_miss(cache_type)
             return None
 
-    def set(
-        self, key: str, value: Dict, ttl: int, cache_type: str = "rag"
-    ) -> bool:
+    def set(self, key: str, value: Dict, ttl: int, cache_type: str = "rag") -> bool:
         """
         Store value in cache with TTL.
 
@@ -168,7 +168,9 @@ class QueryCacheService:
                 self.client.delete(key)
                 deleted += 1
 
-            logger.info(f"Cache invalidation: Deleted {deleted} keys matching '{pattern}'")
+            logger.info(
+                f"Cache invalidation: Deleted {deleted} keys matching '{pattern}'"
+            )
             return deleted
 
         except Exception as e:

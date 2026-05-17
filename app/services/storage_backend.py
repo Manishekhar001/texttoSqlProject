@@ -6,7 +6,7 @@ implement. This allows switching between local files and S3 by changing
 one configuration variable.
 """
 
-from abc import ABC , abstractmethod
+from abc import ABC, abstractmethod
 from typing import Dict, List
 from pathlib import Path
 import numpy as np
@@ -27,7 +27,7 @@ class StorageBackend(ABC):
     """
 
     @abstractmethod
-    def exists(self, document_id : str, file_extension : str) -> bool:
+    def exists(self, document_id: str, file_extension: str) -> bool:
         """
         Check if all cache files exist for a document.
 
@@ -43,7 +43,9 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def save_document(self, document_id : str, file_path : Path, file_extension : str) -> None:
+    def save_document(
+        self, document_id: str, file_path: Path, file_extension: str
+    ) -> None:
         """
         Save original document file to storage.
 
@@ -58,22 +60,26 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def save_chunks(self, document_id : str, file_extension : str, chunks : List[Dict]) -> None:
-            """
-            Save chunks.json to storage.
+    def save_chunks(
+        self, document_id: str, file_extension: str, chunks: List[Dict]
+    ) -> None:
+        """
+        Save chunks.json to storage.
 
-            Args:
-                document_id: SHA-256 hash of document
-                file_extension: File extension (needed for S3 folder organization)
-                chunks: List of document chunks with text and metadata
+        Args:
+            document_id: SHA-256 hash of document
+            file_extension: File extension (needed for S3 folder organization)
+            chunks: List of document chunks with text and metadata
 
-            Raises:
-                Exception if save fails
-            """
-            pass            
-    
+        Raises:
+            Exception if save fails
+        """
+        pass
+
     @abstractmethod
-    def save_embeddings(self, document_id : str, file_extension : str, embeddings : np.ndarray) -> None:
+    def save_embeddings(
+        self, document_id: str, file_extension: str, embeddings: np.ndarray
+    ) -> None:
         """
         Save embeddings.npy to storage.
 
@@ -87,9 +93,10 @@ class StorageBackend(ABC):
         """
         pass
 
-
     @abstractmethod
-    def save_metadata(self, document_id : str, file_extension : str, metadata: Dict) -> None:
+    def save_metadata(
+        self, document_id: str, file_extension: str, metadata: Dict
+    ) -> None:
         """
         Save metadata.json to storage.
 
@@ -104,7 +111,7 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
-    def load_chunks(self, document_id : str, file_extension : str) -> List[Dict]:
+    def load_chunks(self, document_id: str, file_extension: str) -> List[Dict]:
         """
         Load chunks.json from storage.
 

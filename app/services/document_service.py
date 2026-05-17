@@ -150,10 +150,8 @@ def chunk_text(
 
 
 def chunk_text_semantic(
-    text : str,
-    chunk_size : int = 512,
-    encoding_name : str = "cl100k_base"
-) -> List[Dict[str,Any]]:
+    text: str, chunk_size: int = 512, encoding_name: str = "cl100k_base"
+) -> List[Dict[str, Any]]:
     """
     Split text into semantic chunks using semchunk library.
 
@@ -178,30 +176,28 @@ def chunk_text_semantic(
     try:
         from semchunk.semchunk import chunkerify
 
-        chunker = chunkerify(
-            tokenizer, chunk_size = chunk_size
-        )
+        chunker = chunkerify(tokenizer, chunk_size=chunk_size)
         # use semchunk for semantic boundaries
         semantic_chunks = chunker(text)
 
         chunks = []
-        char_position =0
+        char_position = 0
 
         # Meta data
         for idx, chunk_sen in enumerate(semantic_chunks):
             # tokens = tokenizer.encode(chunk_text)
 
             chunk_data = {
-                "text" : chunk_sen,
-                "chunk_index" : idx,
-                "token_count" : len(tokenizer.encode(chunk_sen)),
-                "start_char" : char_position,
-                "end_char" : char_position + len(chunk_sen),
+                "text": chunk_sen,
+                "chunk_index": idx,
+                "token_count": len(tokenizer.encode(chunk_sen)),
+                "start_char": char_position,
+                "end_char": char_position + len(chunk_sen),
                 # Add empty metadata for compatibility with Docling format
-                'headings': [],
-                'page_numbers': [],
-                'doc_items': [],
-                'captions': []
+                "headings": [],
+                "page_numbers": [],
+                "doc_items": [],
+                "captions": [],
             }
 
             chunks.append(chunk_data)
@@ -212,16 +208,20 @@ def chunk_text_semantic(
 
     except Exception as e:
         if isinstance(e, ImportError):
-            logger.warning("semchunk not available, falling back to token-based chunking")
+            logger.warning(
+                "semchunk not available, falling back to token-based chunking"
+            )
         else:
-            logger.warning(f"Semantic chunking failed: {e}, falling back to token-based")
+            logger.warning(
+                f"Semantic chunking failed: {e}, falling back to token-based"
+            )
 
         fallback_chunks = chunk_text(text, chunk_size=chunk_size, overlap=50)
         for chunk in fallback_chunks:
-            chunk['headings'] = []
-            chunk['page_numbers'] = []
-            chunk['doc_items'] = []
-            chunk['captions'] = []
+            chunk["headings"] = []
+            chunk["page_numbers"] = []
+            chunk["doc_items"] = []
+            chunk["captions"] = []
         return fallback_chunks
 
 
@@ -253,10 +253,13 @@ def get_document_stats(file_path: str) -> Dict[str, Any]:
         "file_type": path.suffix,
         "character_count": len(text),
         "token_count": len(tokens),
-        "estimated_chunks_512": (len(tokens) // 512) + 1
+        "estimated_chunks_512": (len(tokens) // 512) + 1,
     }
 
-def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chunk_size : int = 256) -> List[Dict[str, Any]]:
+
+def parse_and_chunk_with_context(
+    file_path: str, chunk_size: int = 512, min_chunk_size: int = 256
+) -> List[Dict[str, Any]]:
     """
     Parse and chunk document using Docling's context-aware approach.
 
@@ -279,8 +282,10 @@ def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chu
     # Fast path for simple text files - bypass Docling to avoid Lambda timeout
     # This is critical for Lambda performance (Docling causes 30+ second timeout)
     file_extension = Path(file_path).suffix.lower()
-    if file_extension in ['.txt','.md','.csv','.log','.json']:
-        logger.info(f"Using fast semantic chunking for {file_extension} file (bypassing Docling)")
+    if file_extension in [".txt", ".md", ".csv", ".log", ".json"]:
+        logger.info(
+            f"Using fast semantic chunking for {file_extension} file (bypassing Docling)"
+        )
         text = parse_document(file_path)  # Uses fast path internally
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
         logger.info(f"Fast semantic chunking complete: {len(chunks)} chunks")
@@ -288,7 +293,9 @@ def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chu
 
     # Check if Docling should be used (config flag)
     if not settings.USE_DOCLING:
-        logger.info("Docling disabled via config (USE_DOCLING=false), using Unstructured + semchunk fallback")
+        logger.info(
+            "Docling disabled via config (USE_DOCLING=false), using Unstructured + semchunk fallback"
+        )
         text = parse_document(file_path)
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
         logger.info(f"Semantic chunking complete: {len(chunks)} chunks")
@@ -299,20 +306,28 @@ def parse_and_chunk_with_context(file_path : str, chunk_size : int = 512,min_chu
         from app.services.docling_service import parse_and_chunk_document
 
         logger.info(f"Using Docling for context-aware chunking: {Path(file_path).name}")
-        chunks = parse_and_chunk_document(file_path, chunk_size=chunk_size, min_chunk_size=min_chunk_size)
+        chunks = parse_and_chunk_document(
+            file_path, chunk_size=chunk_size, min_chunk_size=min_chunk_size
+        )
 
-        logger.info(f"Docling chunking complete: {len(chunks)} chunks with heading context")
+        logger.info(
+            f"Docling chunking complete: {len(chunks)} chunks with heading context"
+        )
         return chunks
 
     except ImportError as e:
-        logger.warning(f"Docling not available (import failed), falling back to semantic chunking: {e}")
+        logger.warning(
+            f"Docling not available (import failed), falling back to semantic chunking: {e}"
+        )
         text = parse_document(file_path)
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
         logger.info(f"Semantic chunking complete: {len(chunks)} chunks")
         return chunks
 
     except Exception as e:
-        logger.error(f"Docling failed unexpectedly, falling back to semantic chunking: {e}")
+        logger.error(
+            f"Docling failed unexpectedly, falling back to semantic chunking: {e}"
+        )
         text = parse_document(file_path)
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
         logger.info(f"Semantic chunking complete: {len(chunks)} chunks")

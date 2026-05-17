@@ -39,9 +39,9 @@ class S3StorageBackend(StorageBackend):
     - markdown/{doc_id}/document.md, chunks.json, embeddings.npy, metadata.json
 
     Each document gets 4 files: original document + cache files.
-    """    
+    """
 
-    def __init__(self, bucket_name : str = None):
+    def __init__(self, bucket_name: str = None):
         """
         Initialize S3 storage.
 
@@ -51,27 +51,29 @@ class S3StorageBackend(StorageBackend):
         Raises:
             ValueError if bucket doesn't exist
             PermissionError if access denied to bucket
-        """     
+        """
 
         self.bucket_name = bucket_name or settings.S3_CACHE_BUCKET
         self.region = settings.AWS_REGION
 
         # Configure boto3 with retry logic (exponential backoff)
         boto_config = Config(
-            region_name= self.region,
-            retries = {
-                'max_attempts' : 3,
-                'mode' : 'adaptive' # Handles throttling automatically
-            }
+            region_name=self.region,
+            retries={
+                "max_attempts": 3,
+                "mode": "adaptive",  # Handles throttling automatically
+            },
         )
 
         # Create boto3 client (uses IAM role in Lambda, or AWS credentials locally)
-        self.s3_client = boto3.client('s3', config=boto_config)
+        self.s3_client = boto3.client("s3", config=boto_config)
 
         # Check bucket exists on startup (fail fast if misconfigured)
         self._validate_bucket()
 
-        logger.info(f"S3Storage initialized with bucket: {self.bucket_name} (region: {self.region})")
+        logger.info(
+            f"S3Storage initialized with bucket: {self.bucket_name} (region: {self.region})"
+        )
 
     def _validate_bucket(self) -> None:
         """
@@ -83,19 +85,21 @@ class S3StorageBackend(StorageBackend):
         """
 
         try:
-            self.s3_client.head_bucket(Bucket = self.bucket_name)
+            self.s3_client.head_bucket(Bucket=self.bucket_name)
 
-            logger.info(f"s3 bucket '{self.bucket_name}' is accessible.")        
+            logger.info(f"s3 bucket '{self.bucket_name}' is accessible.")
         except ClientError as e:
-            error_code = e.response['Error']['Code']
+            error_code = e.response["Error"]["Code"]
 
-            if error_code == '404':
+            if error_code == "404":
                 raise ValueError(f"S3 bucket '{self.bucket_name}' does not exist.")
-            elif error_code == '403':
-                raise PermissionError(f"Access denied to s3 bucket '{self.bucket_name}'")
+            elif error_code == "403":
+                raise PermissionError(
+                    f"Access denied to s3 bucket '{self.bucket_name}'"
+                )
             raise
 
-    def _get_s3_key(self, document_id: str, file_extension : str, filename: str) -> str:
+    def _get_s3_key(self, document_id: str, file_extension: str, filename: str) -> str:
         """
         Generate S3 key with folder structure.
 
@@ -115,7 +119,7 @@ class S3StorageBackend(StorageBackend):
             S3 key string
         """
         return f"{file_extension}/{document_id}/{filename}"
-    
+
     def _object_exists(self, key: str) -> bool:
         """
         Check if S3 object exists (using HEAD request - doesn't download).
@@ -125,17 +129,17 @@ class S3StorageBackend(StorageBackend):
 
         Returns:
             True if object exists, False otherwise
-        """   
+        """
 
         try:
             self.s3_client.head_object(Bucket=self.bucket_name, Key=key)
             return True
         except ClientError as e:
-            if e.response['Error']['Code'] == '404':
+            if e.response["Error"]["Code"] == "404":
                 return False
-            raise # Re-raise other errors (Permissions, etc.) 
+            raise  # Re-raise other errors (Permissions, etc.)
 
-    def exists(self, document_id : str, file_extension :str):
+    def exists(self, document_id: str, file_extension: str):
         """
         Check if ALL 4 files exist in S3 for this document.
 
@@ -147,12 +151,12 @@ class S3StorageBackend(StorageBackend):
 
         Returns:
             True if all 4 files exist
-        """ 
+        """
         required_files = [
             f"document.{file_extension}",  # Original file
             "chunks.json",
             "embeddings.npy",
-            "metadata.json"
+            "metadata.json",
         ]
 
         # Check each file exists
@@ -163,9 +167,11 @@ class S3StorageBackend(StorageBackend):
                 return False
 
         logger.debug(f"S3 cache hit for {document_id}")
-        return True    
+        return True
 
-    def save_document(self, document_id : str, file_path : Path, file_extension : str) -> None:
+    def save_document(
+        self, document_id: str, file_path: Path, file_extension: str
+    ) -> None:
         """
         Upload original document to S3.
 
@@ -179,22 +185,28 @@ class S3StorageBackend(StorageBackend):
         Raises:
             Exception if upload fails
         """
-        key = self._get_s3_key(document_id=document_id, file_extension=file_extension,filename=f"document.{file_extension}")
+        key = self._get_s3_key(
+            document_id=document_id,
+            file_extension=file_extension,
+            filename=f"document.{file_extension}",
+        )
 
         try:
-            with open(file_path,'rb') as f:
+            with open(file_path, "rb") as f:
                 self.s3_client.put_object(
-                    Bucket = self.bucket_name,
-                    Key = key,
-                    Body = f.read(),
-                    ServerSideEncryption = "AES256" # Encrpt at rest
+                    Bucket=self.bucket_name,
+                    Key=key,
+                    Body=f.read(),
+                    ServerSideEncryption="AES256",  # Encrpt at rest
                 )
             logger.info(f"Uploaded original document to S3: {key}")
         except Exception as e:
             logger.error(f"Failed to upload document to S3: {e}")
             raise
 
-    def save_chunks(self, document_id : str, file_extension : str, chunks : List[Dict]) -> None:
+    def save_chunks(
+        self, document_id: str, file_extension: str, chunks: List[Dict]
+    ) -> None:
         """
         Save chunks to S3 as JSON.
 
@@ -208,25 +220,31 @@ class S3StorageBackend(StorageBackend):
         Raises:
             Exception if upload fails
         """
-        key = self._get_s3_key(document_id=document_id, file_extension=file_extension,filename="chunks.json")
+        key = self._get_s3_key(
+            document_id=document_id,
+            file_extension=file_extension,
+            filename="chunks.json",
+        )
 
         try:
-            body = json.dumps(chunks, indent=2).encode('utf-8')
+            body = json.dumps(chunks, indent=2).encode("utf-8")
 
             self.s3_client.put_object(
-                Bucket = self.bucket_name,
-                Key = key,
-                Body = body,
-                ContentType = 'application/json',
-                ServerSideEncryption = "AES256"
-            )   
+                Bucket=self.bucket_name,
+                Key=key,
+                Body=body,
+                ContentType="application/json",
+                ServerSideEncryption="AES256",
+            )
 
             logger.debug(f"Saved {len(chunks)} chunks to S3 : {key}")
         except Exception as e:
             logger.error(f"Failed to save chunks to s3 : {e}")
             raise
 
-    def save_embeddings(self, document_id: str, file_extension: str, embeddings : np.ndarray) -> None:
+    def save_embeddings(
+        self, document_id: str, file_extension: str, embeddings: np.ndarray
+    ) -> None:
         """
         Save embeddings to S3 as NumPy binary.
 
@@ -241,7 +259,7 @@ class S3StorageBackend(StorageBackend):
             Exception if upload fails
         """
 
-        key = self._get_s3_key(document_id,file_extension,"embeddings.npy")
+        key = self._get_s3_key(document_id, file_extension, "embeddings.npy")
 
         try:
             buffer = io.BytesIO()
@@ -249,18 +267,20 @@ class S3StorageBackend(StorageBackend):
             buffer.seek(0)
 
             self.s3_client.put_object(
-                Bucket = self.bucket_name,
-                Key = key,
-                Body = buffer.getvalue(),
-                ContentType = 'application/octet-stream',
-                ServerSideEncryption = 'AES256'
+                Bucket=self.bucket_name,
+                Key=key,
+                Body=buffer.getvalue(),
+                ContentType="application/octet-stream",
+                ServerSideEncryption="AES256",
             )
             logger.debug(f"Saved embeddings {embeddings.shape} to S3: {key}")
         except Exception as e:
             logger.error(f"Failed to save embeddings to S3: {e}")
             raise
 
-    def save_metadata(self, document_id: str, file_extension: str, metadata : Dict) -> None:
+    def save_metadata(
+        self, document_id: str, file_extension: str, metadata: Dict
+    ) -> None:
         """
         Save metadata to S3 as JSON.
 
@@ -275,24 +295,24 @@ class S3StorageBackend(StorageBackend):
             Exception if upload fails
         """
 
-        key = self._get_s3_key(document_id, file_extension, 'metadata.json')
+        key = self._get_s3_key(document_id, file_extension, "metadata.json")
 
-        try: 
-            body = json.dumps(metadata, indent=2).encode('utf-8')
+        try:
+            body = json.dumps(metadata, indent=2).encode("utf-8")
 
             self.s3_client.put_object(
-                Bucket = self.bucket_name,
-                Key = key,
-                Body = body,
-                ContentType = 'application/json',
-                ServerSideEncryption = 'AES256'
-            )        
+                Bucket=self.bucket_name,
+                Key=key,
+                Body=body,
+                ContentType="application/json",
+                ServerSideEncryption="AES256",
+            )
             logger.debug(f"Saved metadata to S3: {key}")
         except Exception as e:
             logger.error(f"Failed to save metadata to S3: {e}")
             raise
 
-    def load_chunks(self, document_id: str, file_extension : str) -> List[Dict]:
+    def load_chunks(self, document_id: str, file_extension: str) -> List[Dict]:
         """
         Load chunks from S3.
 
@@ -306,18 +326,15 @@ class S3StorageBackend(StorageBackend):
         Raises:
             Exception if file not found or load fails
         """
-        key = self._get_s3_key(document_id,file_extension,"chunks.json")
+        key = self._get_s3_key(document_id, file_extension, "chunks.json")
 
         try:
-            response = self.s3_client.get_object(
-                Bucket = self.bucket_name,
-                Key = key
-            )
-            chunks = json.loads(response['Body'].read().decode('utf-8'))
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=key)
+            chunks = json.loads(response["Body"].read().decode("utf-8"))
             logger.debug(f"Loaded {len(chunks)} chunks from S3: {key}")
             return chunks
         except ClientError as e:
-            if e.response['Error']['Code'] == 'NoSuchKey':
+            if e.response["Error"]["Code"] == "NoSuchKey":
                 raise FileNotFoundError(f"Chunks file not found in S3: {key}")
             raise
 
@@ -336,18 +353,18 @@ class S3StorageBackend(StorageBackend):
             Exception if file not found or load fails
         """
 
-        key = self._get_s3_key(document_id,file_extension,"embeddings.npy") 
+        key = self._get_s3_key(document_id, file_extension, "embeddings.npy")
 
         try:
-            response = self.s3_client.get_object(Bucket = self.bucket_name,Key=key)
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=key)
 
-            buffer = io.BytesIO(response['Body'].read())
+            buffer = io.BytesIO(response["Body"].read())
             embeddings = np.load(buffer)
 
             logger.debug(f"Loaded embeddings {embeddings.shape} from S3: {key}")
             return embeddings
         except ClientError as e:
-            if e.response['Error']['Code'] == 'NoSuchKey':
+            if e.response["Error"]["Code"] == "NoSuchKey":
                 raise FileNotFoundError(f"Embeddings file not found in S3: {key}")
             raise
 
@@ -366,15 +383,15 @@ class S3StorageBackend(StorageBackend):
             Exception if file not found or load fails
         """
 
-        key = self._get_s3_key(document_id,file_extension,"metadata.json")
+        key = self._get_s3_key(document_id, file_extension, "metadata.json")
 
         try:
-            response = self.s3_client.get_object(Bucket=self.bucket_name,Key=key)
-            metadata = json.loads(response['Body'].read().decode('utf-8'))
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=key)
+            metadata = json.loads(response["Body"].read().decode("utf-8"))
             logger.debug(f"Loaded metadata from S3: {key}")
             return metadata
         except ClientError as e:
-            if e.response['Error']['Code'] == 'NoSuchKey':
+            if e.response["Error"]["Code"] == "NoSuchKey":
                 raise FileNotFoundError(f"Metadata file not found in S3: {key}")
             raise
 
@@ -390,24 +407,27 @@ class S3StorageBackend(StorageBackend):
 
         Raises:
             Exception if delete fails
-        """  
+        """
 
         keys_to_delete = [
-            {'Key' : self._get_s3_key(document_id,file_extension,f"document.{file_extension}")},
-            {'Key' : self._get_s3_key(document_id,file_extension,"chunks.json")},
-            {'Key' : self._get_s3_key(document_id,file_extension,"embeddings.npy")},
-            {'Key' : self._get_s3_key(document_id,file_extension,"metadata.json")}
-        ]      
+            {
+                "Key": self._get_s3_key(
+                    document_id, file_extension, f"document.{file_extension}"
+                )
+            },
+            {"Key": self._get_s3_key(document_id, file_extension, "chunks.json")},
+            {"Key": self._get_s3_key(document_id, file_extension, "embeddings.npy")},
+            {"Key": self._get_s3_key(document_id, file_extension, "metadata.json")},
+        ]
 
         try:
             self.s3_client.delete_objects(
-                Bucket = self.bucket_name,
-                Delete = {"Objects" : keys_to_delete}
+                Bucket=self.bucket_name, Delete={"Objects": keys_to_delete}
             )
             logger.info(f"Deleted S3 cache for document {document_id}")
         except Exception as e:
             logger.error(f"Failed to delete from S3: {e}")
-            raise   
+            raise
 
     def delete_all(self) -> int:
         """
@@ -427,23 +447,22 @@ class S3StorageBackend(StorageBackend):
 
         try:
             # Paginate through ALL objects in the bucket
-            paginator = self.s3_client.get_paginator('list_objects_v2')
+            paginator = self.s3_client.get_paginator("list_objects_v2")
             for page in paginator.paginate(Bucket=self.bucket_name):
-                if 'Contents' not in page:
+                if "Contents" not in page:
                     continue
 
                 # Collect keys to delete (max 1000 per batch)
-                keys_to_delete = [{'Key': obj['Key']} for obj in page['Contents']]
+                keys_to_delete = [{"Key": obj["Key"]} for obj in page["Contents"]]
 
                 if keys_to_delete:
                     # Batch delete
                     response = self.s3_client.delete_objects(
-                        Bucket=self.bucket_name,
-                        Delete={'Objects': keys_to_delete}
+                        Bucket=self.bucket_name, Delete={"Objects": keys_to_delete}
                     )
 
                     # Count deleted objects
-                    deleted_count = len(response.get('Deleted', []))
+                    deleted_count = len(response.get("Deleted", []))
                     total_deleted += deleted_count
 
                     logger.info(f"Deleted {deleted_count} objects from S3 (batch)")
@@ -468,15 +487,15 @@ class S3StorageBackend(StorageBackend):
 
         try:
             # List ALL objects in the bucket (across pdf/, txt/, markdown/, etc.)
-            paginator = self.s3_client.get_paginator('list_objects_v2')
+            paginator = self.s3_client.get_paginator("list_objects_v2")
             for page in paginator.paginate(Bucket=self.bucket_name):
-                if 'Contents' not in page:
+                if "Contents" not in page:
                     continue
 
-                for obj in page['Contents']:
+                for obj in page["Contents"]:
                     # Extract document_id from key: {doc_type}/{doc_id}/{filename}
                     # Example: pdf/abc123/chunks.json → doc_id = abc123
-                    key_parts = obj['Key'].split('/')
+                    key_parts = obj["Key"].split("/")
                     if len(key_parts) >= 2:
                         # key_parts[0] = document type (pdf, txt, etc.)
                         # key_parts[1] = document_id
@@ -503,17 +522,19 @@ class S3StorageBackend(StorageBackend):
 
         try:
             # Scan all objects in bucket
-            paginator = self.s3_client.get_paginator('list_objects_v2')
+            paginator = self.s3_client.get_paginator("list_objects_v2")
             for page in paginator.paginate(Bucket=self.bucket_name):
-                if 'Contents' not in page:
+                if "Contents" not in page:
                     continue
 
-                for obj in page['Contents']:
-                    total_size += obj['Size']
+                for obj in page["Contents"]:
+                    total_size += obj["Size"]
                     total_objects += 1
 
                     # Count by document type (pdf/, txt/, etc.)
-                    doc_type = obj['Key'].split('/')[0] if '/' in obj['Key'] else 'unknown'
+                    doc_type = (
+                        obj["Key"].split("/")[0] if "/" in obj["Key"] else "unknown"
+                    )
                     doc_type_counts[doc_type] = doc_type_counts.get(doc_type, 0) + 1
 
             stats = {
@@ -523,16 +544,11 @@ class S3StorageBackend(StorageBackend):
                 "total_documents": len(self.list_documents()),
                 "total_objects": total_objects,
                 "total_size_mb": round(total_size / (1024 * 1024), 2),
-                "documents_by_type": doc_type_counts  # Shows pdf: 10, txt: 5, etc.
+                "documents_by_type": doc_type_counts,  # Shows pdf: 10, txt: 5, etc.
             }
 
             logger.info(f"S3 storage stats: {stats}")
             return stats
         except Exception as e:
             logger.error(f"Failed to get S3 stats: {e}")
-            return {
-                "backend": "s3",
-                "bucket": self.bucket_name,
-                "error": str(e)
-            }
-         
+            return {"backend": "s3", "bucket": self.bucket_name, "error": str(e)}
