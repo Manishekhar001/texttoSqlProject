@@ -300,7 +300,9 @@ def parse_and_chunk_with_context(
     # 1. Plain-text fast path                                              #
     # ------------------------------------------------------------------ #
     if file_extension in _PLAIN_TEXT:
-        logger.info(f"[Docling SKIP] Plain-text file — using semchunk directly: {file_name}")
+        logger.info(
+            f"[Docling SKIP] Plain-text file — using semchunk directly: {file_name}"
+        )
         text = parse_document(file_path)
         if not text.strip():
             raise ValueError(
@@ -335,10 +337,13 @@ def parse_and_chunk_with_context(
             )
 
         except ImportError as exc:
-            logger.warning(f"[Docling UNAVAILABLE] {exc} — falling back to Unstructured + semchunk")
+            logger.warning(
+                f"[Docling UNAVAILABLE] {exc} — falling back to Unstructured + semchunk"
+            )
         except Exception as exc:
             logger.error(
-                f"[Docling ERROR] '{file_name}': {exc} — falling back to Unstructured + semchunk"
+                f"[Docling ERROR] '{file_name}': {exc} — "
+                "falling back to Unstructured + semchunk"
             )
     elif not settings.USE_DOCLING:
         logger.info("[Docling DISABLED] USE_DOCLING=false — using Unstructured + semchunk")
