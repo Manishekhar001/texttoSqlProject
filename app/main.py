@@ -123,8 +123,10 @@ async def health_check():
                 if hasattr(settings, "OPIK_API_KEY")
                 else False
             ),
-            "redis_cache_configured": settings.UPSTASH_REDIS_URL is not None
-            and settings.UPSTASH_REDIS_TOKEN is not None,
+            "redis_cache_configured": (
+                settings.UPSTASH_REDIS_URL is not None
+                and settings.UPSTASH_REDIS_TOKEN is not None
+            ),
         },
         "cache": (
             query_cache_service.health_check()
@@ -312,9 +314,7 @@ async def upload_document(file: UploadFile = File(...)):
             # Generate embeddings
             logger.info(f"Generating embeddings for {len(chunks)} chunks...")
             texts = [chunk["text"] for chunk in chunks]
-            embeddings, embedding_usage = await embedding_service.generate_embeddings(
-                texts
-            )
+            embeddings, _ = await embedding_service.generate_embeddings(texts)
 
             # NEW: Save to cache if cache service is available
             if cache_service and doc_id:
@@ -1451,12 +1451,12 @@ def initialize_services():
 
 
 # Event handlers for startup/shutdown
-# NOTE: Startup event disabled for Lambda (initialization handled in lambda_handler.py)
-# Uncomment for local development with uvicorn
+# Startup is guarded: Lambda initializes via lambda_handler.py instead.
 @app.on_event("startup")
 async def startup_event():
-    """Execute tasks on application startup."""
-    initialize_services()
+    """Execute tasks on application startup (local/uvicorn only)."""
+    if not settings.is_lambda:
+        initialize_services()
 
 
 @app.on_event("shutdown")

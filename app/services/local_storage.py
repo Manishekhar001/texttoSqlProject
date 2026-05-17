@@ -269,6 +269,22 @@ class LocalStorageBackend(StorageBackend):
         else:
             logger.warning(f"Attempted to delete non-existent document {document_id}")
 
+    def delete_all(self) -> int:
+        """
+        Delete all cached documents from local storage.
+
+        Returns:
+            Number of document folders deleted
+        """
+        count = 0
+        if self.cache_dir.exists():
+            for doc_dir in self.cache_dir.iterdir():
+                if doc_dir.is_dir():
+                    shutil.rmtree(doc_dir)
+                    count += 1
+        logger.info(f"Cleared entire local cache: {count} documents deleted")
+        return count
+
     def list_documents(self) -> List[str]:
         """
         List all cached document IDs.

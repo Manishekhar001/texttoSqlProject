@@ -23,7 +23,8 @@ class Settings(BaseSettings):
 
     # Pinecone Configuration
     PINECONE_API_KEY: Optional[str] = None
-    PINECONE_ENVIRONMENT: str = "us-east-1-aws"
+    PINECONE_CLOUD: str = "aws"
+    PINECONE_REGION: str = "us-east-1"
     PINECONE_INDEX: str = "rag-cache-docsqa"
 
     # Supabase/PostgreSQL Configuration
@@ -98,10 +99,11 @@ class Settings(BaseSettings):
         """Check if running in AWS Lambda environment."""
         return os.getenv("AWS_LAMBDA_FUNCTION_NAME") is not None
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True,
+    }
 
     # Global settings instance
 

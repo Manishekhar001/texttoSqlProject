@@ -1,0 +1,20 @@
+# Minimal CI test dependencies
+# Heavy ML packages (docling, PyTorch, vanna, ragas) are NOT needed for unit tests.
+# Full install: pip install -r requirements.txt
+
+# Core
+numpy
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+
+# AWS (for S3 storage backend tests)
+boto3
+moto[s3]
+
+# Test & lint
+pytest
+pytest-asyncio
+black
+ruff

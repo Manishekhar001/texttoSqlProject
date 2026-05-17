@@ -272,7 +272,6 @@ class CacheService:
                 # For LocalStorage, this will list and delete each document folder
 
                 if hasattr(self.storage, "delete_all"):
-                    # S3Storage has optimized batch deletion
                     try:
                         objects_deleted = self.storage.delete_all()
                         logger.info(
@@ -291,25 +290,6 @@ class CacheService:
                             "message": f"Failed to clear cache: {str(e)}",
                             "documents_cleared": 0,
                         }
-                else:
-                    # LocalStorage: delete each document individually
-                    # This is slower but local storage has fast I/O
-                    document_ids = self.storage.list_documents()
-
-                    for doc_id in document_ids:
-                        # Problem: We don't know file_extension for each doc_id
-                        # For now, log a warning (LocalStorage should implement delete_all)
-                        pass
-
-                    logger.warning(
-                        "Clear entire cache not fully implemented for local backend"
-                    )
-                    return {
-                        "cleared": False,
-                        "message": "Clear entire cache not fully implemented for local backend (use S3 backend)",
-                        "documents_cleared": 0,
-                        "total_documents": len(document_ids),
-                    }
 
         except Exception as e:
             logger.error(f"Failed to clear cache: {str(e)}")

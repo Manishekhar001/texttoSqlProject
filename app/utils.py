@@ -105,12 +105,12 @@ class QueryValidator:
             ValidationError: If question is invalid
         """
 
-        if not question or not question.rstrip():
+        if not question or not question.strip():
             if allow_empty:
                 return ""
             raise ValidationError("Question cannot be empty.")
 
-        question = question.rstrip()
+        question = question.strip()
 
         if len(question) < QueryValidator.MIN_QUESTION_LENGTH:
             raise ValidationError(

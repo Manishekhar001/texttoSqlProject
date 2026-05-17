@@ -301,8 +301,9 @@ jobs:
             "STORAGE_BACKEND": "s3",
             "S3_CACHE_BUCKET": "${{ secrets.S3_CACHE_BUCKET }}",
             "PINECONE_API_KEY": "${{ secrets.PINECONE_API_KEY }}",
-            "PINECONE_ENVIRONMENT": "${{ secrets.PINECONE_ENVIRONMENT }}",
-            "PINECONE_INDEX_NAME": "${{ secrets.PINECONE_INDEX_NAME }}",
+            "PINECONE_CLOUD": "aws",
+            "PINECONE_REGION": "us-east-1",
+            "PINECONE_INDEX": "${{ secrets.PINECONE_INDEX_NAME }}",
             "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}",
             "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
             "UPSTASH_REDIS_URL": "${{ secrets.UPSTASH_REDIS_URL }}",
@@ -316,7 +317,7 @@ jobs:
             "TRANSFORMERS_CACHE": "/tmp/.cache/huggingface",
             "UNSTRUCTURED_CACHE_DIR": "/tmp/.cache/unstructured",
             "DOCLING_CACHE_DIR": "/tmp/.cache/docling",
-            "USE_DOCKLING": "false"
+            "USE_DOCLING": "false"
           }' /tmp/current-vars.json | jq '{Variables: .}' > /tmp/env-config.json
 
           echo "📋 Environment configuration to apply:"
@@ -372,8 +373,19 @@ jobs:
 
       - name: Test deployment
         env:
-          API_URL: ${{ secrets.API_GATEWAY_URL }}
+          API_URL: ${{ secrets.LAMBDA_FUNCTION_URL }}
         run: |
+
+          # Guard: skip gracefully if URL is not set (deployment itself already succeeded)
+          if [ -z "$API_URL" ]; then
+            echo "⚠️  WARNING: API_GATEWAY_URL secret is not set — skipping health check."
+            echo "   The Lambda function and Docker image were updated successfully."
+            echo "   To enable post-deployment health checks, add the secret:"
+            echo "   Repo → Settings → Secrets and variables → Actions → LAMBDA_FUNCTION_URL"
+            echo "   Value: your Lambda function URL (e.g. https://xxx.lambda-url.us-east-1.on.aws)"
+            exit 0
+          fi
+
           echo ""
           echo "=========================================="
           echo "🧪 Testing Lambda Deployment"

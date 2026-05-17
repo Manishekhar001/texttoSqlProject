@@ -28,7 +28,8 @@ class VectorService:
                 "Pinecone API Key is required. Set PINECONE_API_KEY in .env file."
             )
 
-        self.environment = settings.PINECONE_ENVIRONMENT
+        self.cloud = settings.PINECONE_CLOUD
+        self.region = settings.PINECONE_REGION
         self.index_name = settings.PINECONE_INDEX
 
         # Initialize Pinecone client with gRPC for better performance
@@ -54,10 +55,8 @@ class VectorService:
                     dimension=1536,
                     metric="cosine",
                     spec=ServerlessSpec(
-                        cloud="aws",
-                        region=self.environment.split("-")[
-                            0
-                        ],  # # Extract region from environment
+                        cloud=self.cloud,
+                        region=self.region,
                     ),
                 )
 
