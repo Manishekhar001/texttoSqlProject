@@ -366,6 +366,7 @@ jobs:
             "TRANSFORMERS_CACHE": "/tmp/.cache/huggingface",
             "UNSTRUCTURED_CACHE_DIR": "/tmp/.cache/unstructured",
             "DOCLING_CACHE_DIR": "/tmp/.cache/docling",
+            "RAPIDOCR_HOME": "/tmp",
             "USE_DOCLING": "true"
           }' /tmp/current-vars.json | jq '{Variables: .}' > /tmp/env-config.json
 

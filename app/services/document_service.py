@@ -257,78 +257,116 @@ def get_document_stats(file_path: str) -> Dict[str, Any]:
     }
 
 
+# File types Docling handles well (rich document formats with layout structure)
+_DOCLING_SUPPORTED = {".pdf", ".docx", ".doc", ".pptx", ".ppt", ".html", ".htm"}
+
+# Plain-text formats — no layout to analyse, Docling adds no value
+_PLAIN_TEXT = {".txt", ".md", ".csv", ".log", ".json"}
+
+
 def parse_and_chunk_with_context(
     file_path: str, chunk_size: int = 512, min_chunk_size: int = 256
 ) -> List[Dict[str, Any]]:
     """
-    Parse and chunk document using Docling's context-aware approach.
+    Parse and chunk a document, always attempting Docling first.
 
-    This is the RECOMMENDED method that provides:
-    - Semantic boundary detection (no mid-sentence splits)
-    - Hierarchical heading context preservation
-    - Rich metadata (page numbers, captions, document structure)
-    - Smart merging to ensure chunks are 256-512 tokens (not too small)
+    Processing order
+    ----------------
+    1. Plain-text files (.txt / .md / .csv / .log / .json)
+       Docling adds no value here (no layout to analyse).
+       → direct read → semchunk
 
-    Falls back to traditional token-based chunking if Docling is unavailable.
+    2. Rich document formats (.pdf / .docx / .pptx / .html …)
+       a. Docling  — structure-aware chunking with heading context,
+                     page numbers, captions, and semantic boundaries.
+       b. Unstructured + semchunk  — fallback when Docling is
+                     unavailable or fails.
 
-    Args:
-        file_path: Path to the document file
-        chunk_size: Maximum tokens per chunk (default: 512)
-        min_chunk_size: Minimum tokens per chunk - smaller chunks will be merged (default: 256)
+    Returns
+    -------
+    List of chunk dicts compatible with the vector / cache services.
+    Each chunk contains at minimum: text, chunk_index, token_count,
+    start_char, end_char, headings, page_numbers, doc_items, captions.
 
-    Returns:
-        List of chunk dictionaries with rich metadata
+    Raises
+    ------
+    ValueError  — when no text can be extracted at all (e.g. image-only PDF)
+                  or when every chunking strategy produces 0 chunks.
     """
-    # Fast path for simple text files - bypass Docling to avoid Lambda timeout
-    # This is critical for Lambda performance (Docling causes 30+ second timeout)
+    file_name = Path(file_path).name
     file_extension = Path(file_path).suffix.lower()
-    if file_extension in [".txt", ".md", ".csv", ".log", ".json"]:
-        logger.info(
-            f"Using fast semantic chunking for {file_extension} file (bypassing Docling)"
-        )
-        text = parse_document(file_path)  # Uses fast path internally
-        chunks = chunk_text_semantic(text, chunk_size=chunk_size)
-        logger.info(f"Fast semantic chunking complete: {len(chunks)} chunks")
-        return chunks
 
-    # Check if Docling should be used (config flag)
-    if not settings.USE_DOCLING:
-        logger.info(
-            "Docling disabled via config (USE_DOCLING=false), using Unstructured + semchunk fallback"
-        )
+    # ------------------------------------------------------------------ #
+    # 1. Plain-text fast path                                              #
+    # ------------------------------------------------------------------ #
+    if file_extension in _PLAIN_TEXT:
+        logger.info(f"[Docling SKIP] Plain-text file — using semchunk directly: {file_name}")
         text = parse_document(file_path)
+        if not text.strip():
+            raise ValueError(
+                f"No text extracted from '{file_name}'. The file appears to be empty."
+            )
         chunks = chunk_text_semantic(text, chunk_size=chunk_size)
-        logger.info(f"Semantic chunking complete: {len(chunks)} chunks")
+        logger.info(f"[semchunk] {len(chunks)} chunks created for '{file_name}'")
         return chunks
 
-    try:
-        # Try Docling for complex formats (PDF, DOCX, etc.)
-        from app.services.docling_service import parse_and_chunk_document
+    # ------------------------------------------------------------------ #
+    # 2a. Primary parser: Docling                                          #
+    # ------------------------------------------------------------------ #
+    if settings.USE_DOCLING and file_extension in _DOCLING_SUPPORTED:
+        logger.info(f"[Docling START] Parsing '{file_name}' with Docling (primary)")
+        try:
+            from app.services.docling_service import parse_and_chunk_document
 
-        logger.info(f"Using Docling for context-aware chunking: {Path(file_path).name}")
-        chunks = parse_and_chunk_document(
-            file_path, chunk_size=chunk_size, min_chunk_size=min_chunk_size
-        )
+            chunks = parse_and_chunk_document(
+                file_path, chunk_size=chunk_size, min_chunk_size=min_chunk_size
+            )
 
+            if chunks:
+                logger.info(
+                    f"[Docling OK] {len(chunks)} chunks created for '{file_name}'"
+                )
+                return chunks
+
+            # Docling ran without error but produced nothing
+            logger.warning(
+                f"[Docling WARN] 0 chunks returned for '{file_name}' — "
+                "falling back to Unstructured + semchunk"
+            )
+
+        except ImportError as exc:
+            logger.warning(f"[Docling UNAVAILABLE] {exc} — falling back to Unstructured + semchunk")
+        except Exception as exc:
+            logger.error(
+                f"[Docling ERROR] '{file_name}': {exc} — falling back to Unstructured + semchunk"
+            )
+    elif not settings.USE_DOCLING:
+        logger.info("[Docling DISABLED] USE_DOCLING=false — using Unstructured + semchunk")
+    else:
         logger.info(
-            f"Docling chunking complete: {len(chunks)} chunks with heading context"
+            f"[Docling SKIP] '{file_extension}' not in supported set — using Unstructured + semchunk"
         )
-        return chunks
 
-    except ImportError as e:
-        logger.warning(
-            f"Docling not available (import failed), falling back to semantic chunking: {e}"
-        )
-        text = parse_document(file_path)
-        chunks = chunk_text_semantic(text, chunk_size=chunk_size)
-        logger.info(f"Semantic chunking complete: {len(chunks)} chunks")
-        return chunks
+    # ------------------------------------------------------------------ #
+    # 2b. Fallback: Unstructured + semchunk                                #
+    # ------------------------------------------------------------------ #
+    logger.info(f"[Unstructured START] Parsing '{file_name}'")
+    text = parse_document(file_path)
 
-    except Exception as e:
-        logger.error(
-            f"Docling failed unexpectedly, falling back to semantic chunking: {e}"
+    if not text.strip():
+        raise ValueError(
+            f"No text could be extracted from '{file_name}'. "
+            "The file may be a scanned/image-only PDF, or in an unsupported format. "
+            "Convert it to a text-based PDF and re-upload."
         )
-        text = parse_document(file_path)
-        chunks = chunk_text_semantic(text, chunk_size=chunk_size)
-        logger.info(f"Semantic chunking complete: {len(chunks)} chunks")
-        return chunks
+
+    chunks = chunk_text_semantic(text, chunk_size=chunk_size)
+
+    if not chunks:
+        raise ValueError(
+            f"Chunking produced 0 chunks for '{file_name}' even though text was extracted. "
+            "Check the CHUNK_SIZE setting."
+        )
+
+    logger.info(f"[semchunk FALLBACK] {len(chunks)} chunks created for '{file_name}'")
+    return chunks

@@ -45,7 +45,27 @@ def convert_document(file_path: str):
 
     try:
         logger.info(f"Converting document with Docling : {Path(file_path).name}")
-        converter = DocumentConverter()
+
+        # Disable OCR for Lambda/production:
+        # - Digital PDFs (research papers, reports) have embedded text — OCR is unnecessary.
+        # - RapidOCR (Docling's default OCR engine) downloads ONNX model files into the
+        #   installed package directory (/var/task/rapidocr/models/) which is READ-ONLY
+        #   in AWS Lambda. This causes an [Errno 30] crash before any text is extracted.
+        # - Disabling OCR skips the model download entirely and is the correct approach
+        #   for text-based PDFs. Scanned/image-only PDFs should be converted to
+        #   text-based PDFs before uploading.
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.document_converter import PdfFormatOption
+        from docling.datamodel.base_models import InputFormat
+
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = False  # Prevents RapidOCR model download on Lambda
+
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+            }
+        )
         result = converter.convert(file_path)
         doc = result.document
 
@@ -268,8 +288,16 @@ def chunk_with_hybrid(
         if current_merged is not None:
             merged_chunks.append(current_merged)
 
+        if not merged_chunks:
+            logger.warning(
+                "HybridChunker produced 0 chunks after merging. "
+                "Document may be empty, image-only, or have an unsupported layout."
+            )
+            return []  # Caller will detect 0 chunks and fall back
+
         logger.info(
-            f"After merging: {len(merged_chunks)} chunks (avg {sum(len(tiktoken_encoder.encode(c.text)) for c in merged_chunks) / len(merged_chunks):.1f} tokens)"
+            f"After merging: {len(merged_chunks)} chunks "
+            f"(avg {sum(len(tiktoken_encoder.encode(c.text)) for c in merged_chunks) / len(merged_chunks):.1f} tokens)"
         )
 
         # Convert to format compatible with existing cache/vector storage
